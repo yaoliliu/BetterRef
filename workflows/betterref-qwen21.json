@@ -1,0 +1,468 @@
+{
+  "id": "b1df0d2e-8dc7-4d1f-90e6-df05ad8ba9e9",
+  "revision": 1,
+  "last_node_id": 17,
+  "last_link_id": 16,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "BetterRefH3Examples",
+      "title": "1987《红楼梦》 · Reference stills",
+      "pos": [
+        25,
+        85
+      ],
+      "size": [
+        350,
+        80
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "color": "#663f42",
+      "bgcolor": "#39282b",
+      "properties": {
+        "Node name for S&R": "BetterRefH3Examples",
+        "cnr_id": "betterref",
+        "ver": "0.1.0"
+      },
+      "widgets_values": [],
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "jia_baoyu",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "lin_daiyu",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "BetterRefQwen21Role",
+      "title": "贾宝玉 · Jia Baoyu",
+      "pos": [
+        440,
+        85
+      ],
+      "size": [
+        490,
+        955
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "color": "#663f42",
+      "bgcolor": "#39282b",
+      "properties": {
+        "Node name for S&R": "BetterRefQwen21Role"
+      },
+      "widgets_values": [
+        "贾宝玉",
+        "身穿绛红长袍的贾宝玉",
+        "",
+        "{}"
+      ],
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "previous",
+          "type": "BETTERREF_QWEN21_ROLES",
+          "link": null
+        },
+        {
+          "name": "reference_mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "roles",
+          "type": "BETTERREF_QWEN21_ROLES",
+          "links": [
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "BetterRefQwen21Role",
+      "title": "林黛玉 · Lin Daiyu",
+      "pos": [
+        970,
+        85
+      ],
+      "size": [
+        490,
+        955
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "color": "#663f42",
+      "bgcolor": "#39282b",
+      "properties": {
+        "Node name for S&R": "BetterRefQwen21Role"
+      },
+      "widgets_values": [
+        "林黛玉",
+        "身着淡紫衣裙的林黛玉",
+        "",
+        "{}"
+      ],
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "previous",
+          "type": "BETTERREF_QWEN21_ROLES",
+          "link": 3
+        },
+        {
+          "name": "reference_mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "roles",
+          "type": "BETTERREF_QWEN21_ROLES",
+          "links": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "BetterRefQwen21Generate",
+      "title": "Qwen-Image 2.1 · Scene & sampling",
+      "pos": [
+        1545,
+        85
+      ],
+      "size": [
+        560,
+        510
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "color": "#36574b",
+      "bgcolor": "#233a31",
+      "properties": {
+        "Node name for S&R": "BetterRefQwen21Generate"
+      },
+      "widgets_values": [
+        "以图一为贾宝玉的长相参考，以图二为林黛玉的长相参考。大观园的花窗前，身穿绛红长袍的贾宝玉在画面左侧，身着淡紫衣裙的林黛玉在右侧。两人肩并肩坐在同一张长凳上，肩膀和脸庞都正对镜头，目光直视前方，双眼清晰可见，神情自然。两人共同托着一本摊开的线装书，书停在胸口下方。平视机位，双人半身合影，两张脸大小相近。1987 年古典电视剧剧照，柔和自然光。",
+        42,
+        1152,
+        768,
+        40,
+        "Picture 1 left, Picture 2 right",
+        true,
+        2.0,
+        4.0
+      ],
+      "inputs": [
+        {
+          "name": "roles",
+          "type": "BETTERREF_QWEN21_ROLES",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "IMAGE",
+          "links": [
+            16
+          ]
+        },
+        {
+          "name": "mask_overview",
+          "type": "IMAGE",
+          "links": [
+            14
+          ]
+        },
+        {
+          "name": "baseline",
+          "type": "IMAGE",
+          "links": [
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "PreviewImage",
+      "title": "人物全身遮罩 · Role masks",
+      "pos": [
+        1545,
+        670
+      ],
+      "size": [
+        560,
+        450
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "color": "#354859",
+      "bgcolor": "#24313c",
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 14
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": 15,
+      "type": "PreviewImage",
+      "title": "同 seed 原图 · Baseline",
+      "pos": [
+        2195,
+        85
+      ],
+      "size": [
+        550,
+        430
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "color": "#354859",
+      "bgcolor": "#24313c",
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 15
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": 16,
+      "type": "SaveImage",
+      "title": "BetterRef · Enhanced",
+      "pos": [
+        2195,
+        605
+      ],
+      "size": [
+        550,
+        430
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "color": "#354859",
+      "bgcolor": "#24313c",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "BetterRef/Qwen21"
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": 17,
+      "type": "Note",
+      "title": "使用方法 · Setup",
+      "pos": [
+        25,
+        275
+      ],
+      "size": [
+        350,
+        290
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "color": "#354859",
+      "bgcolor": "#24313c",
+      "properties": {
+        "Node name for S&R": "Note"
+      },
+      "widgets_values": [
+        "Qwen-Image-2.1 → models/diffusers/Qwen-Image-2.1\nSAM3 → models/sam3\n\n默认按从左到右匹配两人。要交换人物站位，请同步修改提示词与 target_order。\n\nAutomatic masks follow the target order. Paint both target masks and turn off compare to skip the baseline. See the Qwen setup in README for Python dependencies."
+      ],
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      4,
+      1,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      5,
+      0,
+      6,
+      1,
+      "BETTERREF_QWEN21_ROLES"
+    ],
+    [
+      8,
+      6,
+      0,
+      11,
+      0,
+      "BETTERREF_QWEN21_ROLES"
+    ],
+    [
+      14,
+      11,
+      1,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      15,
+      11,
+      2,
+      15,
+      0,
+      "IMAGE"
+    ],
+    [
+      16,
+      11,
+      0,
+      16,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "输入 · 1987 Dream of the Red Chamber",
+      "bounding": [
+        5,
+        10,
+        395,
+        620
+      ],
+      "color": "#876063",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "角色与遮罩 · Role editors",
+      "bounding": [
+        420,
+        10,
+        1060,
+        1060
+      ],
+      "color": "#876063",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "场景与定位 · Qwen-Image 2.1",
+      "bounding": [
+        1525,
+        10,
+        605,
+        1145
+      ],
+      "color": "#54796c",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "成图 · Paired outputs",
+      "bounding": [
+        2175,
+        10,
+        595,
+        1060
+      ],
+      "color": "#506e89",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.56,
+      "offset": [
+        35,
+        48
+      ]
+    }
+  },
+  "version": 0.4
+}

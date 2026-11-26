@@ -89,8 +89,9 @@ async function makeLayer(width, height, data) {
   return c;
 }
 function editorOutput(node) {
-  const scene = downstream(node, "BetterRefH3Scene");
-  const locate = downstream(scene, "BetterRefH3Locate");
+  const qwen = node.type === "BetterRefQwen21Role";
+  const scene = downstream(node, qwen ? "BetterRefQwen21Generate" : "BetterRefH3Scene");
+  const locate = qwen ? scene : downstream(scene, "BetterRefH3Locate");
   const last = app.nodeOutputs?.[locate?.id]?.betterref_editor?.[0];
   const width = Number(widget(scene, "width")?.value) || 1536;
   const height = Number(widget(scene, "height")?.value) || 1024;
@@ -100,7 +101,7 @@ function editorOutput(node) {
   return {
     width, height, role,
     targetAuto: matches ? role?.targetAuto : null,
-    baseline: matches && widget(locate, "compare")?.value ? last.baseline : null,
+    baseline: matches && (qwen || widget(locate, "compare")?.value) ? last.baseline : null,
   };
 }
 
@@ -556,7 +557,7 @@ app.registerExtension({
     for (const node of app.graph._nodes) node.refreshMaskPreviews?.();
   },
   async beforeRegisterNodeDef(type, data) {
-    if (data.name === "BetterRefH3Locate") {
+    if (["BetterRefH3Locate", "BetterRefQwen21Generate"].includes(data.name)) {
       const previous = type.prototype.onExecuted;
       type.prototype.onExecuted = function (output) {
         previous?.call(this, output);
@@ -565,7 +566,7 @@ app.registerExtension({
         }
       };
     }
-    if (data.name !== "BetterRefH3Role") return;
+    if (!["BetterRefH3Role", "BetterRefQwen21Role"].includes(data.name)) return;
     const previous = type.prototype.onNodeCreated;
     type.prototype.onNodeCreated = function (...args) {
       previous?.apply(this, args);
