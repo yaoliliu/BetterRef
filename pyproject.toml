@@ -1,0 +1,15 @@
+[project]
+name = "betterref"
+version = "0.1.0"
+description = "Generate multiple characters from separate reference images in native MiniMax H3 Image, with editable role masks and same-seed comparisons."
+license = {file = "LICENSE"}
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/yaoliliu/ComfyUI-BetterRef"
+Documentation = "https://github.com/yaoliliu/ComfyUI-BetterRef#readme"
+"Bug Tracker" = "https://github.com/yaoliliu/ComfyUI-BetterRef/issues"
+
+[tool.comfy]
+PublisherId = "yaoliliu"
+DisplayName = "BetterRef"
