@@ -6,9 +6,9 @@ license = {file = "LICENSE"}
 dependencies = []
 
 [project.urls]
-Repository = "https://github.com/yaoliliu/ComfyUI-BetterRef"
-Documentation = "https://github.com/yaoliliu/ComfyUI-BetterRef#readme"
-"Bug Tracker" = "https://github.com/yaoliliu/ComfyUI-BetterRef/issues"
+Repository = "https://github.com/yaoliliu/BetterRef"
+Documentation = "https://github.com/yaoliliu/BetterRef#readme"
+"Bug Tracker" = "https://github.com/yaoliliu/BetterRef/issues"
 
 [tool.comfy]
 PublisherId = "yaoliliu"

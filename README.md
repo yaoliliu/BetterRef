@@ -11,7 +11,7 @@ BetterRef is a standalone ComfyUI custom node pack built from [FreeFuse](https:/
 1. **Install the node pack** through ComfyUI Manager by searching **BetterRef** (registry ID `betterref`), or clone the repository inside `ComfyUI/custom_nodes`:
    ```bash
    cd ComfyUI/custom_nodes
-   git clone https://github.com/yaoliliu/ComfyUI-BetterRef.git
+   git clone https://github.com/yaoliliu/BetterRef.git
    ```
 2. **Place the model files** (provided separately) under your ComfyUI models directory:
    - `ComfyUI/models/diffusion_models/minimax_h3_image_pruned_bf16.safetensors`
@@ -52,5 +52,5 @@ Single-scene, fixed same-seed comparison at `1536×1024` (seed `42`) using 1987 
 
 - Built from [FreeFuse](https://github.com/yaoliliu/FreeFuse)
 - Example reference credits: [`workflows/h3_ref_examples/CREDITS.md`](workflows/h3_ref_examples/CREDITS.md)
-- Repository: [github.com/yaoliliu/ComfyUI-BetterRef](https://github.com/yaoliliu/ComfyUI-BetterRef) · ComfyUI Registry: [registry.comfy.org/nodes/betterref](https://registry.comfy.org/nodes/betterref)
+- Repository: [github.com/yaoliliu/BetterRef](https://github.com/yaoliliu/BetterRef) · ComfyUI Registry: [registry.comfy.org/nodes/betterref](https://registry.comfy.org/nodes/betterref)
 - License: **Apache-2.0**
