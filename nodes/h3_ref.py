@@ -216,7 +216,7 @@ def decode(vae, samples):
     return image.flatten(0, 1) if image.ndim == 5 else image
 
 
-def overview(scene, masks, baseline, conflict):
+def overview(scene, masks, baseline, conflict, target_label=None):
     from PIL import Image, ImageDraw
     import numpy as np
 
@@ -260,7 +260,7 @@ def overview(scene, masks, baseline, conflict):
     draw = ImageDraw.Draw(canvas)
     draw.text(
         (12, 9),
-        "Target ownership  /  " + ("same-seed baseline" if baseline is not None else "layout"),
+        "Target ownership  /  " + (target_label or ("same-seed baseline" if baseline is not None else "layout")),
         fill="white",
     )
     target = picture(

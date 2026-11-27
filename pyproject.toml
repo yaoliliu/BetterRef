@@ -1,6 +1,6 @@
 [project]
 name = "betterref"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generate multiple characters from separate reference images with MiniMax H3 Image or Qwen-Image 2.1, editable role masks and same-seed comparisons."
 license = {file = "LICENSE"}
 dependencies = []

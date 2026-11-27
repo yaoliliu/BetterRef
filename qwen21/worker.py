@@ -9,7 +9,6 @@ import torch
 from diffusers import QwenImage21Pipeline
 from diffusers.pipelines.qwenimage21.pipeline_qwenimage21 import calculate_dimensions
 from attention import RoleAttention
-from masks import person_masks
 
 
 def grid(path, size):
@@ -29,14 +28,20 @@ def run(folder):
     images = [Image.open(folder / f"role{i}.png").convert("RGB") for i in range(2)]
     ref = [folder / f"reference{i}.png" for i in range(2)]
     target = [folder / f"target{i}.png" for i in range(2)]
-    auto_target = any(not p.exists() for p in target)
     pipe = QwenImage21Pipeline.from_pretrained(job["model"], torch_dtype=torch.bfloat16, local_files_only=True)
     pipe.enable_model_cpu_offload(gpu_id=device.index)
     width, height = job["width"], job["height"]
+    sizes = [calculate_dimensions(768**2, im.width / im.height)[:2] for im in images]
+    ref_sizes = [(w//16, h//16) for w, h in sizes]
+    target_size = (width//16, height//16)
+    needs_masks = any(not path.exists() for path in ref + target)
+    readout = None
 
     completed = 0
     def on_step(pipe, step, timestep, callback_kwargs):
         nonlocal completed
+        if readout is not None:
+            readout.advance(step, callback_kwargs["latents"])
         completed += 1
         temp = folder / "step.tmp"
         temp.write_text(str(completed))
@@ -48,30 +53,40 @@ def run(folder):
         return pipe(prompt=job["prompt"], image=images, generator=rng, width=width, height=height,
                     output_resolution=768, num_inference_steps=job["steps"], true_cfg_scale=1.0,
                     use_kv_cache=True, callback_on_step_end=on_step,
-                    callback_on_step_end_tensor_inputs=[]).images[0].convert("RGB")
+                    callback_on_step_end_tensor_inputs=["latents"] if readout is not None else []).images[0].convert("RGB")
 
-    if job["compare"] or auto_target:
+    if job["compare"]:
         baseline = sample()
         baseline.save(folder / "baseline.png")
-    if auto_target or any(not p.exists() for p in ref):
-        from transformers import Sam3Model, Sam3Processor
-        processor = Sam3Processor.from_pretrained(job["sam3"], local_files_only=True)
-        model = Sam3Model.from_pretrained(job["sam3"], local_files_only=True).eval()
-        for path, img in zip(ref, images):
-            if not path.exists():
-                mask, = person_masks(img, 1, model, processor)
-                Image.fromarray(mask.astype("uint8") * 255).save(path)
-        if auto_target:
-            masks = person_masks(baseline, 2, model, processor)
-            if job["reverse"]:
-                masks.reverse()
-            for path, mask in zip(target, masks):
-                if not path.exists():
-                    Image.fromarray(mask.astype("uint8") * 255).save(path)
-        del model, processor
-    sizes = [calculate_dimensions(768**2, im.width / im.height)[:2] for im in images]
-    ref_masks = [grid(p, (w//16, h//16)) for p, (w,h) in zip(ref, sizes)]
-    target_masks = [grid(p, (width//16, height//16)) for p in target]
+    if needs_masks:
+        from readout import LearnedReadout
+
+        def select_masks(ref_auto, target_auto):
+            def resolve(paths, predictions, sizes):
+                masks = []
+                for path, predicted, size in zip(paths, predictions, sizes):
+                    if path.exists():
+                        masks.append(grid(path, size))
+                    else:
+                        Image.fromarray(predicted.astype("uint8") * 255).save(path)
+                        masks.append(torch.from_numpy(predicted))
+                return masks
+            ref_masks = resolve(ref, ref_auto, ref_sizes)
+            target_masks = resolve(target, target_auto, [target_size] * 2)
+            # With no own reference foreground, leave that target role's attention native.
+            active_targets = [m if r.any() else torch.zeros_like(m) for r, m in zip(ref_masks, target_masks)]
+            return ref_masks, active_targets
+
+        readout = LearnedReadout(pipe, [size[::-1] for size in ref_sizes], target_size[::-1],
+                                 select_masks, job["matching"], job["other_penalty"])
+        if job["steps"] <= readout.last_step + 1:
+            raise ValueError(f"Learned readout needs at least {readout.last_step + 2} sampling steps. "
+                             "Increase steps or supply all four role masks.")
+        readout.install()
+        sample().save(folder / "enhanced.png")
+        return
+    ref_masks = [grid(path, size) for path, size in zip(ref, ref_sizes)]
+    target_masks = [grid(path, target_size) for path in target]
     for block in pipe.transformer.transformer_blocks:
         block.attn.set_processor(RoleAttention(ref_masks, target_masks, job["matching"], job["other_penalty"]))
     sample().save(folder / "enhanced.png")

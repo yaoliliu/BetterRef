@@ -2,45 +2,41 @@
 
 BetterRef is a standalone ComfyUI custom node pack built from [FreeFuse](https://github.com/yaoliliu/FreeFuse) for multi-character reference generation. Each character uses its own reference image and role mask with no per-character training and no face embeddings fed into generation.
 
-This `experimental/qwen-image-2.1` branch adds **Qwen-Image-2.1** support via [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) alongside native **MiniMax H3 Image** ([`workflows/betterref-h3.json`](workflows/betterref-h3.json)). ComfyUI Manager's published `0.1.0` release and the `main` branch currently ship MiniMax H3 only.
+Release `0.2.0` from `experimental/qwen-image-2.1` is now the ComfyUI Manager release for registry ID `betterref`, adding **Qwen-Image-2.1** support via [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) alongside the existing native **MiniMax H3 Image** nodes ([`workflows/betterref-h3.json`](workflows/betterref-h3.json)). As of release, the repository `main` checkout remains the original H3 Image version, so use ComfyUI Manager or the `v0.2.0` tag for both models.
 
-## Qwen-Image-2.1 (Experimental Branch)
+## Qwen-Image-2.1
 
 ![Qwen-Image-2.1 reference cards, baseline, and BetterRef output](docs/qwen21-preview.webp)
 
-*Two reference cards from the 1987 Dream of the Red Chamber TV cast, same-seed baseline, and BetterRef Qwen-Image-2.1 output.*
+*Two reference cards from the 1987 Dream of the Red Chamber TV cast, same-seed baseline, and BetterRef Qwen-Image-2.1 output from the initial mask experiment.*
 
 ### Quick Start
 
-1. **Install the `experimental/qwen-image-2.1` branch** inside `ComfyUI/custom_nodes`:
+1. **Install BetterRef `0.2.0`** through ComfyUI Manager by searching **BetterRef** (registry ID `betterref`), or clone the `v0.2.0` tag inside `ComfyUI/custom_nodes`:
    ```bash
    cd ComfyUI/custom_nodes
-   git clone --branch experimental/qwen-image-2.1 https://github.com/yaoliliu/BetterRef.git
+   git clone --branch v0.2.0 https://github.com/yaoliliu/BetterRef.git
    ```
    Or switch an existing clean checkout:
    ```bash
-   git fetch origin
-   git switch experimental/qwen-image-2.1
+   git fetch --tags origin
+   git checkout v0.2.0
    ```
 2. **Install the Qwen worker dependencies** from the `BetterRef` repository root using the Python interpreter that will run the worker:
    ```bash
    python -m pip install -r qwen21/requirements.txt
    ```
    The worker uses ComfyUI's Python interpreter by default. To run it in a separate CUDA PyTorch environment (for example Python 3.12), set `BETTERREF_QWEN_PYTHON` to that environment's absolute `python` executable path. Tested with PyTorch 2.8, Transformers 5.20, and the pinned Diffusers version in [`qwen21/requirements.txt`](qwen21/requirements.txt).
-3. **Place the model files** under your ComfyUI models directory:
-   - [`Qwen/Qwen-Image-2.1`](https://huggingface.co/Qwen/Qwen-Image-2.1): place the full Diffusers directory, including `model_index.json`, at `ComfyUI/models/diffusers/Qwen-Image-2.1/`
-   - [`facebook/sam3`](https://huggingface.co/facebook/sam3): place the Transformers files directly at `ComfyUI/models/sam3/` (starting with `ComfyUI/models/sam3/config.json`)
-   SAM3 is required only if any reference or target masks are missing.
-4. **Restart ComfyUI**, then drag [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) onto the canvas. Default settings use seed `42`, `1152×768`, `40` steps, and CFG `1` with two reference cards from the 1987 TV cast.
+3. **Place the model files** under your ComfyUI models directory. For [`Qwen/Qwen-Image-2.1`](https://huggingface.co/Qwen/Qwen-Image-2.1): place the full Diffusers directory, including `model_index.json`, at `ComfyUI/models/diffusers/Qwen-Image-2.1/`
+4. **Restart ComfyUI**, then drag [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) onto the canvas. The example uses the bundled role-mask predictor with seed `42`, `1152×768`, `40` steps, and CFG `1` with two reference cards from the 1987 TV cast.
 
 ### How Qwen-Image-2.1 Works
 
-- **Local Diffusers worker:** Qwen-Image-2.1 runs local-only offline inference in a Diffusers worker with CUDA BF16 and CPU offload. It does not use the H3 readout.
-- **Mask generation & editing:** When masks are missing, SAM3 segments full bodies in the reference images and in a same-seed baseline pass. Both reference and target masks are editable, and external masks are supported.
-- **Attention control:** Default matching boost is `2` and other-role penalty is `4`. Overlapping target regions keep original attention.
-- **Role phrases & ordering:** `target_order` sets left/right target assignment (`same` or `reversed` reference order). Each role's target phrase must appear in the scene prompt, while its optional reference phrase can differ.
-- **Compare switch:** Turning off `compare` hides the baseline result. To save the baseline sampling pass, supply both target masks as well.
-- **Multi-seed results:** Qwen 3-seed results are recorded in [`experiments/qwen21/README.md`](experiments/qwen21/README.md).
+- **Local Diffusers worker:** Qwen-Image-2.1 runs local-only offline inference in a Diffusers worker with CUDA BF16 and CPU offload.
+- **Learned readout:** The bundled Qwen predictor fills missing reference and target masks within the first five sampling steps and enables `+2`/`-4` attention from step six. Learned readout with any missing masks needs at least six steps. When all four masks are supplied, it uses them from the first step. Learned mode binds each role by reference, and turning off `compare` takes only one sampling pass.
+- **Mask editing & priority:** Both target and reference masks remain editable, and hand-painted and connected masks take priority for their role.
+- **Attention control & role phrases:** Default matching boost is `2` and other-role penalty is `4`. Overlapping target regions keep original attention. Each role's target phrase must appear in the scene prompt, while its optional reference phrase can differ.
+- **Multi-seed results:** Qwen 3-seed results are recorded in [Qwen experiment notes](https://github.com/yaoliliu/BetterRef/blob/v0.2.0/experiments/qwen21/README.md).
 
 ## MiniMax H3 Image
 
@@ -50,10 +46,10 @@ This `experimental/qwen-image-2.1` branch adds **Qwen-Image-2.1** support via [`
 
 ### H3 Quick Start
 
-1. **Install the node pack** through ComfyUI Manager by searching **BetterRef** (registry ID `betterref`), or clone `main` inside `ComfyUI/custom_nodes`:
+1. **Install the node pack** through ComfyUI Manager by searching **BetterRef** (registry ID `betterref`), or clone the `v0.2.0` tag inside `ComfyUI/custom_nodes` (`main` remains the original H3 Image version):
    ```bash
    cd ComfyUI/custom_nodes
-   git clone https://github.com/yaoliliu/BetterRef.git
+   git clone --branch v0.2.0 https://github.com/yaoliliu/BetterRef.git
    ```
 2. **Place the H3 model files** (provided separately) under your ComfyUI models directory:
    - `ComfyUI/models/diffusion_models/minimax_h3_image_pruned_bf16.safetensors`

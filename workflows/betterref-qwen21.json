@@ -24,7 +24,7 @@
       "properties": {
         "Node name for S&R": "BetterRefH3Examples",
         "cnr_id": "betterref",
-        "ver": "0.1.0"
+        "ver": "0.2.0"
       },
       "widgets_values": [],
       "inputs": [],
@@ -63,7 +63,9 @@
       "color": "#663f42",
       "bgcolor": "#39282b",
       "properties": {
-        "Node name for S&R": "BetterRefQwen21Role"
+        "Node name for S&R": "BetterRefQwen21Role",
+        "cnr_id": "betterref",
+        "ver": "0.2.0"
       },
       "widgets_values": [
         "贾宝玉",
@@ -121,7 +123,9 @@
       "color": "#663f42",
       "bgcolor": "#39282b",
       "properties": {
-        "Node name for S&R": "BetterRefQwen21Role"
+        "Node name for S&R": "BetterRefQwen21Role",
+        "cnr_id": "betterref",
+        "ver": "0.2.0"
       },
       "widgets_values": [
         "林黛玉",
@@ -171,7 +175,7 @@
       ],
       "size": [
         560,
-        510
+        545
       ],
       "flags": {},
       "order": 3,
@@ -179,7 +183,9 @@
       "color": "#36574b",
       "bgcolor": "#233a31",
       "properties": {
-        "Node name for S&R": "BetterRefQwen21Generate"
+        "Node name for S&R": "BetterRefQwen21Generate",
+        "cnr_id": "betterref",
+        "ver": "0.2.0"
       },
       "widgets_values": [
         "以图一为贾宝玉的长相参考，以图二为林黛玉的长相参考。大观园的花窗前，身穿绛红长袍的贾宝玉在画面左侧，身着淡紫衣裙的林黛玉在右侧。两人肩并肩坐在同一张长凳上，肩膀和脸庞都正对镜头，目光直视前方，双眼清晰可见，神情自然。两人共同托着一本摊开的线装书，书停在胸口下方。平视机位，双人半身合影，两张脸大小相近。1987 年古典电视剧剧照，柔和自然光。",
@@ -187,7 +193,6 @@
         1152,
         768,
         40,
-        "Picture 1 left, Picture 2 right",
         true,
         2.0,
         4.0
@@ -336,7 +341,7 @@
         "Node name for S&R": "Note"
       },
       "widgets_values": [
-        "Qwen-Image-2.1 → models/diffusers/Qwen-Image-2.1\nSAM3 → models/sam3\n\n默认按从左到右匹配两人。要交换人物站位，请同步修改提示词与 target_order。\n\nAutomatic masks follow the target order. Paint both target masks and turn off compare to skip the baseline. See the Qwen setup in README for Python dependencies."
+        "Qwen-Image-2.1 → models/diffusers/Qwen-Image-2.1\n\n自动遮罩 · Automatic masks\n前 5 步预测角色遮罩。关闭 compare 可一次采样。\nEarly role masks in the first five steps. Turn off compare for a single pass.\n\n手绘或外接遮罩优先。\nPainted and connected masks take priority."
       ],
       "inputs": [],
       "outputs": []

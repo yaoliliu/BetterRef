@@ -551,8 +551,23 @@ function addEditButton(node, side, chinese, english) {
   return edit;
 }
 
+function migrateQwenWidgets(graph) {
+  for (const node of graph.nodes ?? []) {
+    const values = node.widgets_values;
+    if (node.type !== "BetterRefQwen21Generate" || !Array.isArray(values)) continue;
+    if (values[5] === "Picture 1 left, Picture 2 right" || values[5] === "Picture 2 left, Picture 1 right") {
+      node.widgets_values = [...values.slice(0, 5), ...values.slice(6, 9)];
+      node.inputs = node.inputs?.filter((input) => input.name !== "mask_mode");
+    }
+  }
+  for (const subgraph of graph.definitions?.subgraphs ?? []) migrateQwenWidgets(subgraph);
+}
+
 app.registerExtension({
   name: "BetterRef.H3RoleEditor",
+  beforeConfigureGraph(graph) {
+    migrateQwenWidgets(graph);
+  },
   afterConfigureGraph() {
     for (const node of app.graph._nodes) node.refreshMaskPreviews?.();
   },
