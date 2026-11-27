@@ -1,94 +1,36 @@
 # BetterRef
 
-BetterRef is a standalone ComfyUI custom node pack built from [FreeFuse](https://github.com/yaoliliu/FreeFuse) for multi-character reference generation. Each character uses its own reference image and role mask with no per-character training and no face embeddings fed into generation.
+**Training-free multi-character reference enhancement for MiniMax H3 Image and Qwen-Image-2.1 in ComfyUI.**
 
-Release `0.2.0` from `experimental/qwen-image-2.1` is now the ComfyUI Manager release for registry ID `betterref`, adding **Qwen-Image-2.1** support via [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) alongside the existing native **MiniMax H3 Image** nodes ([`workflows/betterref-h3.json`](workflows/betterref-h3.json)). As of release, the repository `main` checkout remains the original H3 Image version, so use ComfyUI Manager or the `v0.2.0` tag for both models.
+Built from [FreeFuse](https://github.com/yaoliliu/FreeFuse), BetterRef improves multi-character identity consistency without per-character fine-tuning, face crops, or external ID adapters. In the first few denoising steps, a lightweight attention readout separates each character's reference foreground and target region; for the remaining steps, BetterRef injects sparse role-aware attention biases (`+2` same-role boost, `-4` cross-role suppression, `0` on background/overlap) so each character attends cleanly to its own reference while preserving the base model's natural lighting, composition, and interaction. Both reference and target masks remain directly editable on the ComfyUI canvas.
 
-## Qwen-Image-2.1
+![BetterRef Architecture](docs/architecture.webp)
 
-![Qwen-Image-2.1 reference cards, baseline, and BetterRef output](docs/qwen21-preview.webp)
+## Showcase
 
-*Two reference cards from the 1987 Dream of the Red Chamber TV cast, same-seed baseline, and BetterRef Qwen-Image-2.1 output from the initial mask experiment.*
+### MiniMax H3 Image (`1536×1024`, same seed `42`)
 
-### Quick Start
+![MiniMax H3 Image same-seed comparison: Troy and Gabriella](docs/showcase-h3-hsm.webp)
 
-1. **Install BetterRef `0.2.0`** through ComfyUI Manager by searching **BetterRef** (registry ID `betterref`), or clone the `v0.2.0` tag inside `ComfyUI/custom_nodes`:
+### Qwen-Image-2.1 (`1152×768`, 40 steps, same seed `42`)
+
+![Qwen-Image-2.1 same-seed comparison: Ron and Hermione](docs/showcase-qwen21-hp1.webp)
+
+## Quick Start
+
+1. **Install** via ComfyUI Manager (search **BetterRef**, registry ID `betterref`), or clone into `ComfyUI/custom_nodes`:
    ```bash
    cd ComfyUI/custom_nodes
-   git clone --branch v0.2.0 https://github.com/yaoliliu/BetterRef.git
+   git clone --branch v0.2.1 https://github.com/yaoliliu/BetterRef.git
    ```
-   Or switch an existing clean checkout:
-   ```bash
-   git fetch --tags origin
-   git checkout v0.2.0
-   ```
-2. **Install the Qwen worker dependencies** from the `BetterRef` repository root using the Python interpreter that will run the worker:
-   ```bash
-   python -m pip install -r qwen21/requirements.txt
-   ```
-   The worker uses ComfyUI's Python interpreter by default. To run it in a separate CUDA PyTorch environment (for example Python 3.12), set `BETTERREF_QWEN_PYTHON` to that environment's absolute `python` executable path. Tested with PyTorch 2.8, Transformers 5.20, and the pinned Diffusers version in [`qwen21/requirements.txt`](qwen21/requirements.txt).
-3. **Place the model files** under your ComfyUI models directory. For [`Qwen/Qwen-Image-2.1`](https://huggingface.co/Qwen/Qwen-Image-2.1): place the full Diffusers directory, including `model_index.json`, at `ComfyUI/models/diffusers/Qwen-Image-2.1/`
-4. **Restart ComfyUI**, then drag [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) onto the canvas. The example uses the bundled role-mask predictor with seed `42`, `1152×768`, `40` steps, and CFG `1` with two reference cards from the 1987 TV cast.
+   *(For Qwen-Image-2.1, also install worker deps: `python -m pip install -r BetterRef/qwen21/requirements.txt`; set `BETTERREF_QWEN_PYTHON` if using a separate Python 3.12 env.)*
 
-### How Qwen-Image-2.1 Works
+2. **Place model weights** under `ComfyUI/models/`:
+   - **MiniMax H3 Image**: `diffusion_models/minimax_h3_image_pruned_bf16.safetensors`, `text_encoders/qwen3vl_32b_minimax_h3_bf16.safetensors`, `vae/minimax_h3_image_vae_fp16.safetensors`
+   - **Qwen-Image-2.1**: full Diffusers directory at `diffusers/Qwen-Image-2.1/`
 
-- **Local Diffusers worker:** Qwen-Image-2.1 runs local-only offline inference in a Diffusers worker with CUDA BF16 and CPU offload.
-- **Learned readout:** The bundled Qwen predictor fills missing reference and target masks within the first five sampling steps and enables `+2`/`-4` attention from step six. Learned readout with any missing masks needs at least six steps. When all four masks are supplied, it uses them from the first step. Learned mode binds each role by reference, and turning off `compare` takes only one sampling pass.
-- **Mask editing & priority:** Both target and reference masks remain editable, and hand-painted and connected masks take priority for their role.
-- **Attention control & role phrases:** Default matching boost is `2` and other-role penalty is `4`. Overlapping target regions keep original attention. Each role's target phrase must appear in the scene prompt, while its optional reference phrase can differ.
-- **Multi-seed results:** Qwen 3-seed results are recorded in [Qwen experiment notes](https://github.com/yaoliliu/BetterRef/blob/v0.2.0/experiments/qwen21/README.md).
+3. **Run**: Restart ComfyUI and drag [`workflows/betterref-h3.json`](workflows/betterref-h3.json) or [`workflows/betterref-qwen21.json`](workflows/betterref-qwen21.json) onto the canvas. Swap in your own reference portraits via `Load Image`, keep each role's `target_phrase` verbatim in the scene prompt, and optionally refine masks directly on each role card.
 
-## MiniMax H3 Image
+## License & Credits
 
-![TV still references, H3 baseline, enhanced output, and face crops](workflows/h3_ref_examples/preview.webp)
-
-*TV still references, H3 baseline, BetterRef enhanced output (`FreeFuse` in the figure is the original experiment label), and face crops.*
-
-### H3 Quick Start
-
-1. **Install the node pack** through ComfyUI Manager by searching **BetterRef** (registry ID `betterref`), or clone the `v0.2.0` tag inside `ComfyUI/custom_nodes` (`main` remains the original H3 Image version):
-   ```bash
-   cd ComfyUI/custom_nodes
-   git clone --branch v0.2.0 https://github.com/yaoliliu/BetterRef.git
-   ```
-2. **Place the H3 model files** (provided separately) under your ComfyUI models directory:
-   - `ComfyUI/models/diffusion_models/minimax_h3_image_pruned_bf16.safetensors`
-   - `ComfyUI/models/text_encoders/qwen3vl_32b_minimax_h3_bf16.safetensors`
-   - `ComfyUI/models/vae/minimax_h3_image_vae_fp16.safetensors`
-3. **Restart ComfyUI**, then drag [`workflows/betterref-h3.json`](workflows/betterref-h3.json) onto the canvas.
-
-MiniMax H3 mode requires native MiniMax H3 Image support in ComfyUI (tested at commit `e19f5e957964737da3e80fc54cd21f190a9c7ef3`). Example references and the readout weights are already included. To swap in your own cast, feed a photo from `Load Image` into each Role node.
-
-### How H3 Works
-
-During the first three sampling steps on MiniMax H3, a bundled small learned attention readout inspects blocks `10`, `20`, `30`, and `40` to separate each character's foreground from the scene. By default, BetterRef adds `+2` to same-role reference foreground attention logits and subtracts `4` from other-role reference foreground logits, keeping identities separated without touching face embeddings.
-
-### H3 Role Phrases and Mask Editing
-
-- **Chaining multiple characters:** Connect the previous role's output into the next role's `previous` input to add more characters. Keep every role name unique.
-- **Role phrases & background:** `target_phrase` must appear verbatim in your scene prompt, and `background_phrase` must also appear in the prompt whenever roles are bound. `reference_phrase` is optional and inherits the target phrase if left blank, which is useful when a character's outfit changes between the reference and the scene, for example target `"身穿绛红长袍的贾宝玉"` versus reference `"戴红色抹额、披孔雀纹斗篷的贾宝玉"`.
-- **Independent reference and target masks:** Both reference and target generate automatic masks that you can refine independently. Click the direct bilingual **Edit reference mask** or **Edit target mask** button to open the editor, inspect previews, and save and run your changes.
-
-![Reference mask editor](docs/mask-editor.webp)
-
-- **Same-seed compare switch:** Toggle the compare switch to generate a matching baseline alongside the enhanced result. Disabling it skips the full baseline pass. When no baseline is present, target mask editing works directly on a blank layout.
-
-![Target mask editor](docs/target-mask.webp)
-
-### H3 Results: Jia Baoyu and Lin Daiyu, seed 42
-
-Single-scene, fixed same-seed comparison on MiniMax H3 at `1536×1024` (seed `42`) using 1987 *Dream of the Red Chamber* TV stills, reported as cosine similarities to the supplied references:
-
-| Character | Metric | H3 Baseline | BetterRef |
-| --- | --- | --- | --- |
-| Jia Baoyu | ArcFace | 0.552 | 0.646 |
-| Jia Baoyu | LVFace-T | 0.404 | 0.554 |
-| Lin Daiyu | ArcFace | 0.531 | 0.709 |
-| Lin Daiyu | LVFace-T | 0.507 | 0.642 |
-
-## Credits & License
-
-- Built from [FreeFuse](https://github.com/yaoliliu/FreeFuse)
-- Example reference credits: [`workflows/h3_ref_examples/CREDITS.md`](workflows/h3_ref_examples/CREDITS.md)
-- Repository: [github.com/yaoliliu/BetterRef](https://github.com/yaoliliu/BetterRef) · ComfyUI Registry: [registry.comfy.org/nodes/betterref](https://registry.comfy.org/nodes/betterref)
-- License: **Apache-2.0**
+Built from [FreeFuse](https://github.com/yaoliliu/FreeFuse) · ComfyUI Registry: [betterref](https://registry.comfy.org/nodes/betterref) · License: **Apache-2.0**
